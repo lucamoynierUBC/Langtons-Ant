@@ -1,20 +1,19 @@
-module Main(main) where
+module Main where
 
 import Graphics.Gloss
 
-
-main :: IO ()
-main = display window background drawing
 
 data Cell = Black | White
     deriving (Show)
 
 type Position = (Int, Int)
 
-data Direction = Up | Down | Left | Right
-    deriving(Show)
+data Direction = N | S | W | E
+    deriving(Eq, Show)
 
 type Grid = [[Cell]]
+
+type Ant = (Position, Direction)
 
 data Gamestate = Game
     {
@@ -39,16 +38,55 @@ background :: Color
 background = white
 
 antRadius :: Integer
-antRadius = 3
+antRadius = 2
 
-toInt :: Float -> Integer
-toInt = round
+spawnAnt :: Ant
+spawnAnt = ((gridDimension `div` 2, gridDimension `div` 2), W)
 
-getColor :: Float -> Float -> Color
-getColor i j = if even $ toInt ((i * 8) + j) then orange else blue
+turnLeft :: Direction -> Direction
+turnLeft N = W
+turnLeft W = S
+turnLeft S = E
+turnLeft E = N
 
-drawTile :: Float -> Float -> Color -> Picture
-drawTile a b col = translate a b $ color col $ rectangleSolid 5 5
+turnRight :: Direction -> Direction
+turnRight N = E
+turnRight E = S
+turnRight S = W 
+turnRight W = N
 
-drawing :: Picture
-drawing = pictures [drawTile (row * 5) (e * 5) (getColor row e) | row <- [0 .. 8], e <- [0 .. 8]]
+initialState :: Gamestate
+initialState = Game
+    {
+        antPosition = (gridDimension `div` 2, gridDimension `div` 2),
+        steps = 0,
+        antState = W,
+        gridState = replicate gridDimension (replicate gridDimension White)
+    }
+
+drawGrid :: Grid -> Picture
+drawGrid grid = Pictures [ translate (fromIntegral x * cellSize) (fromIntegral y * cellSize) (drawCell cell)
+                         | (y, row) <- zip [0..] grid
+                         , (x, cell) <- zip [0..] row ]
+  where
+    cellSize = fromIntegral cellDimension
+    drawCell :: Cell -> Picture
+    drawCell cell = Pictures [color cellColor $ rectangleSolid cellSize cellSize, color borderColor $ rectangleWire cellSize cellSize]
+        where
+            cellSize = fromIntegral cellDimension
+            cellColor = case cell of
+                        Black -> black
+                        White -> white
+            borderColor = greyN 0.8 -- Light grey color for the border
+
+drawAnt :: Ant -> Picture
+drawAnt ((x, y), _) = translate (fromIntegral x * cellSize) (fromIntegral y * cellSize) $ color red $ circleSolid antSize
+  where
+    cellSize = fromIntegral cellDimension
+    antSize = fromIntegral antRadius
+
+drawing :: Gamestate -> Picture
+drawing gameState = pictures [drawGrid (gridState gameState), drawAnt (antPosition gameState, antState gameState)]
+
+main :: IO ()
+main = display window background (drawing initialState)
