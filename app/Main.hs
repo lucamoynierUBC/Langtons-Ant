@@ -1,10 +1,10 @@
 module Main where
 
 import Graphics.Gloss
-
+import Graphics.Gloss.Data.ViewPort
 
 data Cell = Black | White
-    deriving (Show)
+    deriving (Show, Eq)
 
 type Position = (Int, Int)
 
@@ -25,7 +25,7 @@ data Gamestate = Game
     deriving (Show)
 
 gridDimension :: Int
-gridDimension = 100
+gridDimension = 50
 
 cellDimension :: Int
 cellDimension = 5
@@ -54,6 +54,11 @@ turnRight N = E
 turnRight E = S
 turnRight S = W 
 turnRight W = N
+
+flipCell :: Cell -> Cell
+flipCell Black = White
+flipCell White = Black
+
 
 initialState :: Gamestate
 initialState = Game
@@ -88,5 +93,40 @@ drawAnt ((x, y), _) = translate (fromIntegral x * cellSize) (fromIntegral y * ce
 drawing :: Gamestate -> Picture
 drawing gameState = pictures [drawGrid (gridState gameState), drawAnt (antPosition gameState, antState gameState)]
 
+
+
+-- Make sure fps is defined properly, e.g., fps = 60
+fps :: Int
+fps = 30
+
+-- Corrected moveAnt function to move ant by 1 unit disregarding seconds
+moveAnt :: Float -> Gamestate -> Gamestate
+moveAnt _ game = game { antPosition = newPos,  antState = newDir, gridState = newGrid}
+  where
+    grid = gridState game
+    dir = antState game
+    (x, y) = antPosition game
+    currCell = (grid !! x) !! y
+    newDir = if currCell == Black then turnRight dir else turnLeft dir
+    newPos  | newDir == N = (x, (y-1) `mod` gridDimension)
+            | newDir == S = (x, (y+1) `mod` gridDimension)
+            | newDir == W = ((x-1) `mod` gridDimension, y)
+            | newDir == E = ((x+1) `mod` gridDimension, y)
+    newGrid = updateGrid x y (flipCell currCell) grid
+
+updateGrid :: Int -> Int -> Cell -> Grid -> Grid
+updateGrid x y newCell grid = 
+  take y grid ++ 
+  [take x (grid !! y) ++ [newCell] ++ drop (x+1) (grid !! y)] ++ 
+  drop (y+1) grid
+    
+
+    
+   
+
+-- The correct signature for the update function used with simulate
+update :: ViewPort -> Float -> Gamestate -> Gamestate
+update _ seconds game = moveAnt seconds game
+
 main :: IO ()
-main = display window background (drawing initialState)
+main = simulate window background fps initialState drawing update
