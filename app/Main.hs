@@ -1,7 +1,10 @@
+{-# LANGUAGE OverloadedLabels  #-}
+{-# LANGUAGE OverloadedStrings #-}
 module Main where
 
 import Graphics.Gloss
-
+import Data.GI.Base
+import qualified GI.Gtk as Gtk
 
 data Cell = Black | White
     deriving (Show)
@@ -89,4 +92,34 @@ drawing :: Gamestate -> Picture
 drawing gameState = pictures [drawGrid (gridState gameState), drawAnt (antPosition gameState, antState gameState)]
 
 main :: IO ()
-main = display window background (drawing initialState)
+main = 
+    do
+        -- Pick colors, then continue to grid
+        Gtk.init Nothing
+        boxx1 <- Gtk.boxNew Gtk.OrientationVertical 75
+        wind <- new Gtk.Window[#title := "Welcome! Please pick two colors."]
+        on wind #destroy Gtk.mainQuit
+        #resize wind 400 400
+        combo1 <- Gtk.comboBoxTextNew
+        Gtk.comboBoxTextAppendText combo1 "default color: white"
+        Gtk.comboBoxTextAppendText combo1 "black"
+        Gtk.comboBoxTextAppendText combo1 "red"
+        Gtk.comboBoxTextAppendText combo1 "green"
+        Gtk.comboBoxTextAppendText combo1 "blue"
+        combo2 <- Gtk.comboBoxTextNew
+        Gtk.comboBoxTextAppendText combo2 "default color: black"
+        Gtk.comboBoxTextAppendText combo2 "white"
+        Gtk.comboBoxTextAppendText combo2 "red"
+        Gtk.comboBoxTextAppendText combo2 "green"
+        Gtk.comboBoxTextAppendText combo2 "blue"
+        cont <- Gtk.buttonNewWithLabel "Continue"
+        Gtk.containerAdd boxx1 combo1
+        Gtk.containerAdd boxx1 combo2
+        Gtk.containerAdd boxx1 cont
+        #add wind boxx1
+        #showAll wind
+        c1 <- Gtk.comboBoxTextGetActiveText combo1 -- TO DO: convert these into 
+        c2 <- Gtk.comboBoxTextGetActiveText combo2 --        actual colors
+        on cont #clicked (Gtk.windowClose wind)
+        Gtk.main
+        display window background (drawing initialState)
