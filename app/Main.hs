@@ -1,35 +1,53 @@
-{-# LANGUAGE OverloadedLabels  #-}
+-- {-# LANGUAGE OverloadedLabels  #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# OPTIONS_GHC -Wno-unused-do-bind #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 {-# HLINT ignore "Redundant return" #-}
+
 module Main where
 
+{-
+Langton's Ant Application
+
+The "world" is a grid, and each square can either be black or white. The ant starts from the centre of the grid, 
+and moves according to these rules (taken from Wikipedia):
+
+At a white square, turn 90° clockwise, flip the colour of the square, move forward one unit
+At a black square, turn 90° counter-clockwise, flip the colour of the square, move forward one unit
+
+Our version of Langton's Ant allows the user to pick their own colors, instead of the default black & white
+-}
+
 import Graphics.Gloss
-import Data.GI.Base
-import qualified GI.Gtk as Gtk
 import Graphics.Gloss.Data.ViewPort
 import qualified Graphics.Gloss as Gloss
-import qualified Data.String
+-- import qualified Data.String
+-- import Data.GI.Base
+-- import qualified GI.Gtk as Gtk
 
 data Cell = C1 | C2
     deriving (Eq, Show)
 
 type Position = (Int, Int)
 
+-- Colors of grid, default is white & black
 color1 :: Gloss.Color
 color1 = white
 
 color2 :: Gloss.Color
 color2 = black
 
+-- Possible directions the ant could have
 data Direction = N | S | W | E
     deriving(Eq, Show)
 
+-- Grid is a 2-dimensional list of cells
 type Grid = [[Cell]]
 
+-- The ant is represented by its position on the grid and direction
 type Ant = (Position, Direction)
 
+-- The game state contains information regarding the ant and the grid
 data Gamestate = Game
     {
         antPosition :: Position,
@@ -41,12 +59,15 @@ data Gamestate = Game
     }
     deriving (Show)
 
+-- One side of a square grid
 gridDimension :: Int
 gridDimension = 100
 
+-- One side of a square cell
 cellDimension :: Int
 cellDimension = 5
 
+-- Application window
 window :: Display
 window = InWindow "Langtons Ant" (gridDimension * cellDimension, gridDimension * cellDimension) (10, 10)
 
@@ -60,6 +81,7 @@ antRadius = 2
 spawnAnt :: Ant
 spawnAnt = ((gridDimension `div` 2, gridDimension `div` 2), W)
 
+-- Turning left or right changes the ant's direction
 turnLeft :: Direction -> Direction
 turnLeft N = W
 turnLeft W = S
@@ -72,10 +94,12 @@ turnRight E = S
 turnRight S = W
 turnRight W = N
 
+-- flipCell inverts the cell's color
 flipCell :: Cell -> Cell
 flipCell C1 = C2
 flipCell C2 = C1
 
+-- The initial state of the game, ant is located in the middle and is facing north
 initialState :: Gamestate
 initialState = Game
     {
@@ -87,6 +111,7 @@ initialState = Game
         c2 = color2
     }
 
+-- drawGrid renders a grid made up of cells that can be either of the 2 colors taken as input.
 drawGrid :: Grid -> Color -> Color -> Picture
 drawGrid grid co1 co2 = Pictures [ translate (fromIntegral x * cellSize) (fromIntegral y * cellSize) (drawCell cell)
                          | (y, row) <- zip [0..] grid
@@ -102,18 +127,21 @@ drawGrid grid co1 co2 = Pictures [ translate (fromIntegral x * cellSize) (fromIn
                         C2 -> co2
             borderColor = greyN 0.8 -- Light grey color for the border
 
+-- drawAnt renders the ant
 drawAnt :: Ant -> Picture
 drawAnt ((x, y), _) = translate (fromIntegral x * cellSize) (fromIntegral y * cellSize) $ color red $ circleSolid antSize
   where
     cellSize = fromIntegral cellDimension
     antSize = fromIntegral antRadius
 
+-- drawing renders the entire program, which includes the grid and the ant based on game state and ant state respectively
 drawing :: Gamestate -> Picture
 drawing gameState = pictures [drawGrid (gridState gameState) (c1 gameState) (c2 gameState), drawAnt (antPosition gameState, antState gameState)]
 
 fps :: Int
 fps = 200
 
+-- moveAnt updates the game state depending on which type of cell the ant encounters
 moveAnt :: Float -> Gamestate -> Gamestate
 moveAnt _ game = game { antPosition = (x', y'),  antState = newDir, gridState = newGrid, steps = (steps game) + 1}
   where
@@ -132,7 +160,7 @@ moveAnt _ game = game { antPosition = (x', y'),  antState = newDir, gridState = 
     newGrid = updateGrid x y currCell grid
 
 
-
+-- updateGrid updates the cells (flips colors if ant lands on it, leaves them the same otherwise)
 updateGrid :: Int -> Int -> Cell -> Grid -> Grid
 updateGrid x y cell grid = map updateRow (zip [0..] grid)
   where
@@ -145,13 +173,11 @@ updateGrid x y cell grid = map updateRow (zip [0..] grid)
       | otherwise = cell
     
 
-    
-   
-
--- The correct signature for the update function used with simulate
+-- update gets the ant to move and continue the program/game
 update :: ViewPort -> Float -> Gamestate -> Gamestate
 update _ seconds game = moveAnt seconds game
 
+-- main first gets the user to input two colors for the grid, starts the program if user makes two valid choices
 main :: IO ()
 main =
     do
@@ -171,39 +197,23 @@ main =
         else
             putStrLn "Invalid input. Please enter a number."
         
-        
-
-
+-- setColors adjusts the initial state of the game using the color inputs        
 setColors :: String -> String -> Gamestate
-setColors col1 col2 = initialState {c1 = convert1 col1, c2 = convert2 col2}
+setColors col1 col2 = initialState {c1 = convert col1 white, c2 = convert col2 black}
 
-convert1 :: String -> Gloss.Color
-convert1 c
+-- convert converts a string input to a color, if string isn't a predefined value, returns the 
+-- "default" color (def)
+convert :: String -> Gloss.Color -> Gloss.Color
+convert c def
     | c == "1" = white
     | c == "2" = black
     | c == "3" = rose
     | c == "4" = chartreuse
     | c == "5" = azure
-    | otherwise = white
-
-convert2 :: String -> Gloss.Color
-convert2 c
-    | c == "1" = white
-    | c == "2" = black
-    | c == "3" = rose
-    | c == "4" = chartreuse
-    | c == "5" = azure
-    | otherwise = black
+    | otherwise = def
 
 
-
-
-
-
-
-
-
-
+-- GTK Stuff:
 {-
 --getColors :: (Gloss.Color, Gloss.Color)
 getColors =
@@ -237,8 +247,6 @@ getColors =
         Gtk.main
         return (c1, c2)
 
-
-convert :: (Eq a, Data.String.IsString a) => a -> Color
 convert c
     | c == "default color: white" || c == "white" = white
     | c == "default color: black" || c == "black" = black
