@@ -181,30 +181,36 @@ update _ seconds game = moveAnt seconds game
 main :: IO ()
 main =
     do
-        putStrLn "Welcome! Please pick the number of the first color from these options:\n 1. white (default)\n 2. black\n 3. red\n 4. green\n 5. blue"
+        putStrLn "Welcome! Please pick the number of the first color from these options:\n 1. white (default)\n 2. black\n 3. red\n 4. green\n 5. blue\n"
         col1 <- getLine
         if col1 `elem` ["1", "2", "3", "4", "5", ""]
             then do
-                putStrLn "Please pick the second color from these options:\n 1. white\n 2. black (default)\n 3. red\n 4. green\n 5. blue"
+                putStrLn "Please pick the second color from these options:\n 1. white\n 2. black (default)\n 3. red\n 4. green\n 5. blue\n"
                 col2 <- getLine
                 if col2 `elem` ["1","2", "3","4","5",""]
                     then do
-                        let configured = setColors col1 col2
-                        simulate window background fps configured drawing update
+                        putStr "Please pick a speed by entering the number of the option:\n 1. 5 fps (very slow)\n 2. 20 fps (slow)\n 3. 60 fps (medium)\n 4. 120 fps (fast) (default)\n 5. 200 fps (very fast) \n"
+                        speed <- getLine
+                        if speed `elem` ["1","2", "3","4","5",""]
+                            then do
+                                let configured = setColors col1 col2
+                                simulate window background (convertSpeed speed) configured drawing update
+                        else
+                            putStrLn "Invalid input. Please enter a number corresponding to an option."
                 else
-                    putStrLn "Invalid input. Please enter a number."
+                    putStrLn "Invalid input. Please enter a number corresponding to an option."
         
         else
-            putStrLn "Invalid input. Please enter a number."
+            putStrLn "Invalid input. Please enter a number corresponding to an option."
         
 -- setColors adjusts the initial state of the game using the color inputs        
 setColors :: String -> String -> Gamestate
-setColors col1 col2 = initialState {c1 = convert col1 white, c2 = convert col2 black}
+setColors col1 col2 = initialState {c1 = convertColor col1 white, c2 = convertColor col2 black}
 
--- convert converts a string input to a color, if string isn't a predefined value, returns the 
+-- convertColor converts a string input to a color, if string isn't a predefined value, returns the 
 -- "default" color (def)
-convert :: String -> Gloss.Color -> Gloss.Color
-convert c def
+convertColor :: String -> Gloss.Color -> Gloss.Color
+convertColor c def
     | c == "1" = white
     | c == "2" = black
     | c == "3" = rose
@@ -212,6 +218,16 @@ convert c def
     | c == "5" = azure
     | otherwise = def
 
+-- convertSpeed converts a string to an Int, which is an fps value for the speed
+-- default speed of application is 120
+convertSpeed :: String -> Int
+convertSpeed spd
+    | spd == "1" = 5
+    | spd == "2" = 20
+    | spd == "3" = 60
+    | spd == "4" = 120
+    | spd == "5" = 200
+    | otherwise = 120
 
 -- GTK Stuff:
 {-
