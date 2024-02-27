@@ -30,9 +30,13 @@ import qualified Graphics.Gloss as Gloss
 -- import Data.GI.Base
 -- import qualified GI.Gtk as Gtk
 
+-- The Cell data type represents the state of a cell on the grid in Langtons Ant.
+-- It is defined with two possible values: C1 and C2. 
+-- These values represent the two states a cell can be in and correspond to 2 different colors. 
 data Cell = C1 | C2
     deriving (Eq, Show)
 
+-- Represents a coordinate in a 2 dimensional space. (X and Y coordinate)
 type Position = (Int, Int)
 
 -- Colors of grid, default is white & black
@@ -46,7 +50,7 @@ color2 = black
 data Direction = N | S | W | E
     deriving(Eq, Show)
 
--- Grid is a 2-dimensional list of cells
+-- Grid is a 2-dimensional list of cells. Each inner list represents a row of cells, and the collection of these rows forms a complete grid.
 type Grid = [[Cell]]
 
 -- The ant is represented by its position on the grid and the direction it is facing
