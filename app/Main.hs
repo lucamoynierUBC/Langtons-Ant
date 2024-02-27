@@ -42,14 +42,14 @@ color1 = white
 color2 :: Gloss.Color
 color2 = black
 
--- Possible directions the ant could have
+-- Possible directions the ant could have, representing North, South, etc.
 data Direction = N | S | W | E
     deriving(Eq, Show)
 
 -- Grid is a 2-dimensional list of cells
 type Grid = [[Cell]]
 
--- The ant is represented by its position on the grid and direction
+-- The ant is represented by its position on the grid and the direction it is facing
 type Ant = (Position, Direction)
 
 -- The game state contains information regarding the ant and the grid
@@ -64,11 +64,11 @@ data Gamestate = Game
     }
     deriving (Show)
 
--- One side of a square grid
+-- Grid dimension constant consisting of 100 cells
 gridDimension :: Int
 gridDimension = 100
 
--- One side of a square cell
+-- Each cell has a dimension of 5 pixels
 cellDimension :: Int
 cellDimension = 5
 
@@ -83,10 +83,11 @@ background = white
 antRadius :: Integer
 antRadius = 2
 
+-- Function to spawn ant, not used in the program
 spawnAnt :: Ant
 spawnAnt = ((gridDimension `div` 2, gridDimension `div` 2), W)
 
--- Turning left or right changes the ant's direction
+-- Turning left or right changes the ant's direction by 90 degrees
 turnLeft :: Direction -> Direction
 turnLeft N = W
 turnLeft W = S
@@ -105,6 +106,7 @@ flipCell C1 = C2
 flipCell C2 = C1
 
 -- The initial state of the game, ant is located in the middle and is facing north
+-- gridState is initiated as a square of 100 x 100 cells of color 1. 
 initialState :: Gamestate
 initialState = Game
     {
@@ -147,10 +149,11 @@ drawSteps i = translate (fromIntegral (gridDimension - 150)) (fromIntegral (grid
 drawing :: Gamestate -> Picture
 drawing gameState = pictures [drawGrid (gridState gameState) (c1 gameState) (c2 gameState), drawAnt (antPosition gameState, antState gameState), drawSteps (steps gameState)]
 
+-- default fps
 fps :: Int
 fps = 120
 
--- moveAnt updates the game state depending on which type of cell the ant encounters
+-- moveAnt updates the game state based on its current direction and the state of the cell it is on.
 moveAnt :: Float -> Gamestate -> Gamestate
 moveAnt _ game = game { antPosition = (x', y'),  antState = newDir, gridState = newGrid, steps = steps game + 1}
   where
@@ -169,7 +172,10 @@ moveAnt _ game = game { antPosition = (x', y'),  antState = newDir, gridState = 
     newGrid = updateGrid x y currCell grid
 
 
--- updateGrid updates the cells (flips colors if ant lands on it, leaves them the same otherwise)
+-- updateGrid updates a specific cell in the grid with a new state.
+-- It takes the x and y coordinates of the cell to update, the new cell state, and the current grid.
+-- The grid is represented as a list of rows, each row being a list of cells.
+-- The function returns a new grid with the specific cell updated.
 updateGrid :: Int -> Int -> Cell -> Grid -> Grid
 updateGrid x y cell grid = map updateRow (zip [0..] grid)
   where
