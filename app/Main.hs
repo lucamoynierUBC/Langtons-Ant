@@ -118,7 +118,8 @@ initialState = Game
         c2 = color2
     }
 
--- drawGrid renders a grid made up of cells that can be either of the 2 colors taken as input.
+-- drawGrid renders a grid made up of cells that can be either of the 2 colors taken as input. 
+-- drawgrid iterates over each cell, determines its color based on its state, and renders it at the appropriate position.
 drawGrid :: Grid -> Color -> Color -> Picture
 drawGrid grid co1 co2 = Pictures [ translate (fromIntegral x * cellSize) (fromIntegral y * cellSize) (drawCell cell)
                          | (y, row) <- zip [0..] grid
@@ -132,9 +133,10 @@ drawGrid grid co1 co2 = Pictures [ translate (fromIntegral x * cellSize) (fromIn
             cellColor = case cell of
                         C1 -> co1
                         C2 -> co2
-            borderColor = greyN 0.8 -- Light grey color for the border
+            borderColor = greyN 0.8
 
--- drawAnt renders the ant
+-- drawAnt renders the ant by taking the ant's position and direction and produces a Picture representing the ant 
+-- at the correct location on the grid. 
 drawAnt :: Ant -> Picture
 drawAnt ((x, y), _) = translate (fromIntegral x * cellSize) (fromIntegral y * cellSize) $ color red $ circleSolid antSize
   where
@@ -154,6 +156,9 @@ fps :: Int
 fps = 120
 
 -- moveAnt updates the game state based on its current direction and the state of the cell it is on.
+-- It calculates the ants new direction based on the curren cell's state and updates the ants position according
+-- to the new direction. Finally, it inverts the cell's color where the ant moved from, increments the step count, 
+-- and returns the updated game state.
 moveAnt :: Float -> Gamestate -> Gamestate
 moveAnt _ game = game { antPosition = (x', y'),  antState = newDir, gridState = newGrid, steps = steps game + 1}
   where
@@ -174,8 +179,7 @@ moveAnt _ game = game { antPosition = (x', y'),  antState = newDir, gridState = 
 
 -- updateGrid updates a specific cell in the grid with a new state.
 -- It takes the x and y coordinates of the cell to update, the new cell state, and the current grid.
--- The grid is represented as a list of rows, each row being a list of cells.
--- The function returns a new grid with the specific cell updated.
+-- The grid is represented as a list of rows, each row being a list of cells. The function returns a new grid with the specific cell updated.
 updateGrid :: Int -> Int -> Cell -> Grid -> Grid
 updateGrid x y cell grid = map updateRow (zip [0..] grid)
   where
