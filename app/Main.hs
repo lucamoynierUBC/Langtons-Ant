@@ -3,6 +3,11 @@
 {-# OPTIONS_GHC -Wno-unused-do-bind #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 {-# HLINT ignore "Redundant return" #-}
+{-# OPTIONS_GHC -Wno-name-shadowing #-}
+{-# OPTIONS_GHC -Wno-unused-matches #-}
+{-# HLINT ignore "Use zipWith" #-}
+{-# HLINT ignore "Eta reduce" #-}
+{-# OPTIONS_GHC -Wno-type-defaults #-}
 
 module Main where
 
@@ -69,7 +74,7 @@ cellDimension = 5
 
 -- Application window
 window :: Display
-window = InWindow "Langtons Ant" (gridDimension * cellDimension, gridDimension * cellDimension) (10, 10)
+window = InWindow "Langton's Ant" (1000, 1000) (200, 200)
 
 -- Drawing Settings
 background :: Color
@@ -134,16 +139,20 @@ drawAnt ((x, y), _) = translate (fromIntegral x * cellSize) (fromIntegral y * ce
     cellSize = fromIntegral cellDimension
     antSize = fromIntegral antRadius
 
+-- drawSteps renders the total number of steps the ant has taken
+drawSteps :: Int -> Picture
+drawSteps i = translate (fromIntegral (gridDimension - 150)) (fromIntegral (gridDimension + 450)) (Text ("Steps:"++show i))
+
 -- drawing renders the entire program, which includes the grid and the ant based on game state and ant state respectively
 drawing :: Gamestate -> Picture
-drawing gameState = pictures [drawGrid (gridState gameState) (c1 gameState) (c2 gameState), drawAnt (antPosition gameState, antState gameState)]
+drawing gameState = pictures [drawGrid (gridState gameState) (c1 gameState) (c2 gameState), drawAnt (antPosition gameState, antState gameState), drawSteps (steps gameState)]
 
 fps :: Int
-fps = 200
+fps = 120
 
 -- moveAnt updates the game state depending on which type of cell the ant encounters
 moveAnt :: Float -> Gamestate -> Gamestate
-moveAnt _ game = game { antPosition = (x', y'),  antState = newDir, gridState = newGrid, steps = (steps game) + 1}
+moveAnt _ game = game { antPosition = (x', y'),  antState = newDir, gridState = newGrid, steps = steps game + 1}
   where
     grid = gridState game
     dir = antState game
@@ -151,12 +160,12 @@ moveAnt _ game = game { antPosition = (x', y'),  antState = newDir, gridState = 
     currCell = (grid !! y) !! x
     newDir  | currCell == C2 = turnLeft dir
             | otherwise = turnRight dir
-    x'  | newDir == E = x + 1
-        | newDir == W  = x - 1
-        | otherwise = x
-    y'  | newDir == N = y - 1
-        | newDir == S = y + 1
-        | otherwise = y
+    x'  | newDir == E = (x + 1) `mod` gridDimension
+        | newDir == W  = (x - 1) `mod` gridDimension
+        | otherwise = x `mod` gridDimension
+    y'  | newDir == N = (y - 1) `mod` gridDimension
+        | newDir == S = (y + 1) `mod` gridDimension
+        | otherwise = y `mod` gridDimension
     newGrid = updateGrid x y currCell grid
 
 
@@ -171,13 +180,14 @@ updateGrid x y cell grid = map updateRow (zip [0..] grid)
     updateCell (cIdx, cell)
       | cIdx == x = flipCell cell
       | otherwise = cell
-    
+
 
 -- update gets the ant to move and continue the program/game
 update :: ViewPort -> Float -> Gamestate -> Gamestate
 update _ seconds game = moveAnt seconds game
 
--- main first gets the user to input two colors for the grid, starts the program if user makes two valid choices
+-- main first gets the user to input two colors for the grid, and the speed.
+-- It then starts the program if user makes three valid choices.
 main :: IO ()
 main =
     do
@@ -199,10 +209,10 @@ main =
                             putStrLn "Invalid input. Please enter a number corresponding to an option."
                 else
                     putStrLn "Invalid input. Please enter a number corresponding to an option."
-        
+
         else
             putStrLn "Invalid input. Please enter a number corresponding to an option."
-        
+
 -- setColors adjusts the initial state of the game using the color inputs        
 setColors :: String -> String -> Gamestate
 setColors col1 col2 = initialState {c1 = convertColor col1 white, c2 = convertColor col2 black}
@@ -227,7 +237,9 @@ convertSpeed spd
     | spd == "3" = 60
     | spd == "4" = 120
     | spd == "5" = 200
-    | otherwise = 120
+    | otherwise = fps
+
+
 
 -- GTK Stuff:
 {-
