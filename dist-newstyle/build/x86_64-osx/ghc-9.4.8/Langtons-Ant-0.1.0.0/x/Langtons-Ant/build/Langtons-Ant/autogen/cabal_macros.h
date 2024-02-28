@@ -20,16 +20,6 @@
   (major1) == 4 && (major2) <  17 || \
   (major1) == 4 && (major2) == 17 && (minor) <= 2)
 #endif /* MIN_VERSION_base */
-/* package gi-gtk-3.0.41 */
-#ifndef VERSION_gi_gtk
-#define VERSION_gi_gtk "3.0.41"
-#endif /* VERSION_gi_gtk */
-#ifndef MIN_VERSION_gi_gtk
-#define MIN_VERSION_gi_gtk(major1,major2,minor) (\
-  (major1) <  3 || \
-  (major1) == 3 && (major2) <  0 || \
-  (major1) == 3 && (major2) == 0 && (minor) <= 41)
-#endif /* MIN_VERSION_gi_gtk */
 /* package gloss-1.13.2.2 */
 #ifndef VERSION_gloss
 #define VERSION_gloss "1.13.2.2"
@@ -40,16 +30,6 @@
   (major1) == 1 && (major2) <  13 || \
   (major1) == 1 && (major2) == 13 && (minor) <= 2)
 #endif /* MIN_VERSION_gloss */
-/* package haskell-gi-base-0.26.4 */
-#ifndef VERSION_haskell_gi_base
-#define VERSION_haskell_gi_base "0.26.4"
-#endif /* VERSION_haskell_gi_base */
-#ifndef MIN_VERSION_haskell_gi_base
-#define MIN_VERSION_haskell_gi_base(major1,major2,minor) (\
-  (major1) <  0 || \
-  (major1) == 0 && (major2) <  26 || \
-  (major1) == 0 && (major2) == 26 && (minor) <= 4)
-#endif /* MIN_VERSION_haskell_gi_base */
 
 /* tool gcc-15.0.0 */
 #ifndef TOOL_VERSION_gcc

@@ -1,4 +1,3 @@
--- {-# LANGUAGE OverloadedLabels  #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# OPTIONS_GHC -Wno-unused-do-bind #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
@@ -40,11 +39,11 @@ data Cell = C1 | C2
 type Position = (Int, Int)
 
 -- Colors of grid, default is white & black
-color1 :: Gloss.Color
-color1 = white
+color1def :: Gloss.Color
+color1def = white
 
-color2 :: Gloss.Color
-color2 = black
+color2def :: Gloss.Color
+color2def = black
 
 -- Possible directions the ant could have, representing North, South, etc.
 data Direction = N | S | W | E
@@ -118,8 +117,8 @@ initialState = Game
         steps = 0,
         antState = W,
         gridState = replicate gridDimension (replicate gridDimension C1),
-        c1 = color1,
-        c2 = color2
+        c1 = color1def,
+        c2 = color2def
     }
 
 -- drawGrid renders a grid made up of cells that can be either of the 2 colors taken as input. 
@@ -229,7 +228,7 @@ main =
 
 -- setColors adjusts the initial state of the game using the color inputs        
 setColors :: String -> String -> Gamestate
-setColors col1 col2 = initialState {c1 = convertColor col1 white, c2 = convertColor col2 black}
+setColors col1 col2 = initialState {c1 = convertColor col1 color1def, c2 = convertColor col2 color2def}
 
 -- convertColor converts a string input to a color, if string isn't a predefined value, returns the 
 -- "default" color (def)
@@ -243,7 +242,7 @@ convertColor c def
     | otherwise = def
 
 -- convertSpeed converts a string to an Int, which is an fps value for the speed
--- default speed of application is 120
+-- default speed of application is fps = 120
 convertSpeed :: String -> Int
 convertSpeed spd
     | spd == "1" = 5
